@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <thread>
 #include <vector>
 #include <string>
@@ -149,8 +149,11 @@ public:
         delete _mjesec; _mjesec = nullptr;
         delete _godina; _godina = nullptr;
     }
-    int toDays() {
+    int toDays()const {
         return *_godina * 365 + *_mjesec * 30 + *_dan;
+    }
+    bool operator >=(const Datum& obj) {
+        return this->toDays() > obj.toDays();
     }
     friend ostream& operator<< (ostream& COUT, const Datum& obj) {
         COUT << *obj._dan << "." << *obj._mjesec << "." << *obj._godina;
@@ -373,9 +376,9 @@ class Kandidat : public Korisnik{
     }
 public:
     void Info() {}
-    Kandidat(const char* imePrezime, string emailAdresa, string lozinka) : Korisnik(imePrezime, emailAdresa, lozinka){
+    Kandidat(const char* imePrezime, string emailAdresa, string lozinka) : Korisnik(imePrezime, emailAdresa, lozinka) {
     }
-    Kandidat(const Kandidat& obj) : Korisnik(obj){
+    Kandidat(const Kandidat& obj) : Korisnik(obj) {
         for (int i = 0; i < obj._polozeniPredmeti.size(); i++) {
             _polozeniPredmeti.push_back(new Ispit(*obj._polozeniPredmeti[i]));
         }
@@ -453,7 +456,26 @@ public:
         }
         return ocj;
     }
-
+    /*
+    koristeci adekvatan operator osigurati pretragu pozitivno ocijenjenih odgovora u okviru pitanja u proslijedjenom vremenskom opsegu OD - DO.
+    rezultat pretrage trebaju biti ona pitanja kojima je, u definisanom periodu, najmanje jedan odgovor ocijenjen pozitivno. drugi formalni
+    argument tipa float predstavlja prosjecnu ocjenu odgovora na pronadjenom pitanju
+    */
+    Kolekcija<Pitanje, float> operator()(Datum prvi, Datum zadnji) const{
+        Kolekcija<Pitanje, float> novi;
+        for (int i = 0; i < _polozeniPredmeti.size(); i++) {
+            for (int j = 0; j < _polozeniPredmeti[i]->GetPitanjaOdgovore().size(); j++) {
+                for (int k = 0; k < _polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getTrenutno(); k++) {
+                    if (_polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getElement2(k)->toDays() > prvi.toDays() && zadnji.toDays() > _polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getElement2(k)->toDays()) {
+                        if (_polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getTrenutno() >= 1) {
+                            novi.AddElement(_polozeniPredmeti[i]->GetPitanjaOdgovore()[j], _polozeniPredmeti[i]->GetPitanjaOdgovore()[j].prosjekPitanja());
+                        };
+                    }
+                }
+            }
+        }
+        return novi;
+    }
     friend ostream& operator<< (ostream& COUT, Kandidat& obj) {
         COUT << (Korisnik&)obj << endl;
         for (size_t i = 0; i < obj._polozeniPredmeti.size(); i++)
@@ -629,10 +651,10 @@ void main() {
     rezultat pretrage trebaju biti ona pitanja kojima je, u definisanom periodu, najmanje jedan odgovor ocijenjen pozitivno. drugi formalni
     argument tipa float predstavlja prosjecnu ocjenu odgovora na pronadjenom pitanju
     */
-   /* Kolekcija<Pitanje, float> pretraga = (*jasminPolaznik)(ocijenjenOD, ocijenjenDO);
+    Kolekcija<Pitanje, float> pretraga = (*jasminPolaznik)(ocijenjenOD, ocijenjenDO);
     cout << "U periodu od " << ocijenjenOD << " - " << ocijenjenDO << " ocijenjeno " << pretraga.getTrenutno() << " pitanja." << endl;
     for (size_t i = 0; i < pretraga.getTrenutno(); i++)
-        cout << pretraga.getElement1(i) << endl << pretraga.getElement2(i) << crt;*/
+        cout << pretraga.getElement1(i) << endl << pretraga.getElement2(i) << crt;
 
     delete jasmin;
     delete adel;
