@@ -466,7 +466,7 @@ public:
         for (int i = 0; i < _polozeniPredmeti.size(); i++) {
             for (int j = 0; j < _polozeniPredmeti[i]->GetPitanjaOdgovore().size(); j++) {
                 for (int k = 0; k < _polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getTrenutno(); k++) {
-                    if (_polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getElement2(k)->toDays() > prvi.toDays() && zadnji.toDays() > _polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getElement2(k)->toDays()) {
+                    if (_polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getElement2(k)->toDays() >= prvi.toDays() && zadnji.toDays() >= _polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getElement2(k)->toDays()) {
                         if (_polozeniPredmeti[i]->GetPitanjaOdgovore()[j].GetOcjene().getTrenutno() >= 1) {
                             novi.AddElement(_polozeniPredmeti[i]->GetPitanjaOdgovore()[j], _polozeniPredmeti[i]->GetPitanjaOdgovore()[j].prosjekPitanja());
                         };
