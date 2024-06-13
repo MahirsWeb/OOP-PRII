@@ -258,6 +258,7 @@ public:
             _predmet = new Predmet(*obj._predmet);
             _pitanjaOdgovori = obj._pitanjaOdgovori;
         }
+        return *this;
     }
     ~Ispit() {
         delete _predmet; _predmet = nullptr;
