@@ -72,7 +72,7 @@ public:
 		_elementi2[*_trenutno] = new T2(e2);
 		(*_trenutno)++;
 	}
-	void RemoveAt(int lokacija){
+	void RemoveAt(int lokacija) {
 		for (int i = lokacija; i < *_trenutno - 1; i++) {
 			_elementi1[i] = _elementi1[i + 1];
 			_elementi2[i] = _elementi2[i + 1];
@@ -184,6 +184,7 @@ public:
 		}
 		return prosjek / _ocjene.getTrenutno();
 	}
+
 	bool AddOcjena(int ocjena, Datum& datum) {
 		int trenutno = _ocjene.getTrenutno();
 		for (int i = 0; i < _ocjene.getTrenutno(); i++) {
@@ -191,7 +192,7 @@ public:
 				if (razlikaDana(*_ocjene.getElement2(trenutno - 1), datum) < 3)
 					return false;
 			}
-			if (veceManje(*_ocjene.getElement2(i), datum))
+			if (veceManje(*_ocjene.getElement2(trenutno - 1), datum))
 				return false;
 		}
 		_ocjene.AddElement(ocjena, new Datum(datum));
@@ -236,6 +237,7 @@ public:
 			for (size_t i = 0; i < _polozeneTehnike.size(); i++) {
 				delete _polozeneTehnike[i];
 			}
+			_polozeneTehnike.clear();
 			_pojas = obj._pojas;
 			for (int i = 0; i < obj._polozeneTehnike.size(); i++) {
 				_polozeneTehnike.push_back(new Tehnika(*obj._polozeneTehnike[i]));
@@ -269,7 +271,11 @@ public:
 			if (_polozeneTehnike[i]->prosjekTehnike() > 0)
 				brojac++;
 		}
-		return prosjek / brojac;
+		if(brojac > 0)
+			return prosjek / brojac;
+		else {
+			return prosjek / _polozeneTehnike.size();
+		}
 	}*/
 	vector<Tehnika*>& GetTehnike() { return _polozeneTehnike; }
 	Pojas GetPojas() { return _pojas; }
@@ -321,20 +327,9 @@ public:
 
 mutex muteks;
 
-class KaratePolaznik : public Korisnik{
+class KaratePolaznik : public Korisnik {
 	vector<Polaganje*> _polozeniPojasevi;
-	/*
-	FROM:info@karate.ba
-	TO: emailKorisnika
-	Postovani ime i prezime, evidentirana vam je thenika X za Y pojas.
-   Dosadasnji uspjeh (prosjek ocjena)
-	na pojasu Y iznosi F, a ukupni uspjeh (prosjek ocjena) na svim pojasevima
-   iznosi Z.
-   Fakultet informacijskih tehnologija
-   Pismeni dio ispita
-   Pozdrav.
-	KARATE Team.
-	*/
+
 	void saljiMail(Pojas pojas, Tehnika tehnika) {
 		muteks.lock();
 		cout << endl;
@@ -351,7 +346,7 @@ class KaratePolaznik : public Korisnik{
 	}
 public:
 	void Info() {}
-	KaratePolaznik(const char* imePrezime, string emailAdresa, string lozinka) : Korisnik(imePrezime,emailAdresa,lozinka){
+	KaratePolaznik(const char* imePrezime, string emailAdresa, string lozinka) : Korisnik(imePrezime, emailAdresa, lozinka) {
 	}
 	KaratePolaznik(const KaratePolaznik& obj) : Korisnik(obj)
 	{
@@ -386,20 +381,7 @@ public:
 		}
 		return prosjek / _polozeniPojasevi.size();
 	}
-	/*
-	svi kandidati podrazumijevano imaju BIJELI pojas (za njega se ne dodaju
-   tehnike)
-	sve tehnike na nivou jednog pojasa (ZUTI, ZELENI ... ) se evidentiraju
-   unutar istog objekta tipa Polaganje,
-	tom prilikom onemoguciti:
-	- dodavanje istih (moraju biti identicne vrijednosti svih atributa)
-   tehnika na nivou jednog pojasa,
-	- dodavanje tehnika za visi pojas ako prethodni pojas nema evidentirane
-   najmanje 3 tehnike ili nema prosjecnu ocjenu svih tehnika vecu od 3.5
-	(onemoguciti dodavanje tehnike za NARANDZASTI ako ne postoji najmanje 3
-   tehnike za ZUTI pojas i njihov prosjek je veci od 3.5)
-	funkcija vraca true ili false u zavisnosti od (ne)uspjesnost izvrsenja
-	*/
+	
 	bool AddTehniku(Pojas pojas, Tehnika tehnika) {
 		for (int i = 0; i < _polozeniPojasevi.size(); i++) {
 			if (pojas > _polozeniPojasevi[i]->GetPojas() && (_polozeniPojasevi[i]->GetTehnike().size() < 3 || _polozeniPojasevi[i]->prosjekPojasa() < 3.5))
@@ -570,8 +552,8 @@ void main() {
 	*/
 
 	Korisnik* jasmin = new KaratePolaznik("Jasmin Azemovic", "jasmin@karate.ba", "j@sm1N*");
-	Korisnik* adel = new KaratePolaznik("Adel Handzic", "adel@edu.karate.ba","4Ade1*H");
-	Korisnik* lozinkaNijeValidna = new KaratePolaznik("John Doe","john.doe@google.com", "johndoe");
+	Korisnik* adel = new KaratePolaznik("Adel Handzic", "adel@edu.karate.ba", "4Ade1*H");
+	Korisnik* lozinkaNijeValidna = new KaratePolaznik("John Doe", "john.doe@google.com", "johndoe");
 	/*
 	svi kandidati podrazumijevano imaju BIJELI pojas (za njega se ne dodaju
    tehnike)
