@@ -19,8 +19,12 @@ const char* PORUKA = "\n--------------------------------------------------------
 "-------------------------------------------------------------------------------\n";
 
 const char* crt = "\n-------------------------------------------\n";
-enum eRazred { PRVI, DRUGI, TRECI, CETVRTI };
-const char* ispisRazred[] = { "PRVI","DRUGI","TRECI","CETVRTI" };
+enum eRazred { PRVI = 1, DRUGI, TRECI, CETVRTI };
+ostream& operator<<(ostream& COUT, eRazred obj) {
+    const char* ispisRazred[] = { "PRVI","DRUGI","TRECI","CETVRTI" };
+    COUT << ispisRazred[obj - 1];
+    return COUT;
+}
 char* GetNizKaraktera(const char* sadrzaj, bool dealociraj = false) {
     if (sadrzaj == nullptr)return nullptr;
     int vel = strlen(sadrzaj) + 1;
@@ -140,7 +144,7 @@ public:
         delete _mjesec; _mjesec = nullptr;
         delete _godina; _godina = nullptr;
     }
-    int toDays() const{
+    int toDays() const {
         return *_godina * 365 + *_mjesec * 30 + *_dan;
     }
     bool operator>(const Datum& obj) {
@@ -154,7 +158,7 @@ public:
 
 class Predmet {
     char* _naziv;
-    //int se odnosi na ocjenu u opsegu od 1 – 5, a datum na momenat postizanja ocjene
+    //int se odnosi na ocjenu u opsegu od 1 ï¿½ 5, a datum na momenat postizanja ocjene
     Kolekcija<int, Datum> _ocjene;
 public:
     Predmet(const char* naziv = "", int ocjena = 0, Datum datum = Datum()) {
@@ -178,6 +182,15 @@ public:
     }
     ~Predmet() {
         delete[] _naziv; _naziv = nullptr;
+    }
+    float prosjekDatuma() {
+        float prosjek = 0.0f;
+        if (_ocjene.getTrenutno() == 0)
+            return 0;
+        for (int i = 0; i < _ocjene.getTrenutno() - 1; i++) {
+            prosjek += abs(_ocjene.getElement2(i).toDays() - _ocjene.getElement2(i + 1).toDays());
+        }
+        return prosjek / _ocjene.getTrenutno();
     }
     bool operator==(const Predmet& obj) {
         return strcmp(_naziv, obj._naziv) == 0;
@@ -259,7 +272,7 @@ public:
     eRazred GetERazred() { return _razred; }
     friend ostream& operator<< (ostream& COUT, const Uspjeh& obj) {
         COUT << endl;
-        COUT << "Razred: " << ispisRazred[obj._razred] << "\t" << *obj._polozeniPredmeti << endl;
+        COUT << "Razred: " << obj._razred << "\t" << *obj._polozeniPredmeti << endl;
         return COUT;
     }
 };
@@ -283,8 +296,8 @@ class Kandidat {
         muteks.lock();
         cout << "FROM:info@fit.ba" << endl;
         cout << "TO: " << GetEmail() << endl;
-        cout << "Postovani " << GetImePrezime() << ", evidentirali ste uspjeh za " << ispisRazred[razred] << " razred.";
-        cout << "Dosadasnji uspjeh na nivou " << ispisRazred[razred] << " iznosi ";
+        cout << "Postovani " << GetImePrezime() << ", evidentirali ste uspjeh za " << razred << " razred.";
+        cout << "Dosadasnji uspjeh na nivou " << razred << " iznosi ";
         for (int i = 0; i < _uspjeh.size(); i++) {
             if (_uspjeh[i].GetERazred() == razred)
                 cout << _uspjeh[i].prosjekRazreda();
@@ -302,7 +315,7 @@ class Kandidat {
             if (_uspjeh[i].GetERazred() == razred)
                 cout << _uspjeh[i].prosjekRazreda();
         }
-        cout << " u " << ispisRazred[razred] << " razredu" << endl;
+        cout << " u " << razred << " razredu" << endl;
         cout << endl;
         muteks.unlock();
     }
@@ -356,7 +369,7 @@ public:
                         return false;
                 }
                 _uspjeh[i].GetPredmeti()->AddElement(predmet, napomena);
-                thread mail(&Kandidat::saljiMail, this,razred, predmet);
+                thread mail(&Kandidat::saljiMail, this, razred, predmet);
                 mail.join();
                 if (_uspjeh[i].prosjekRazreda() > 4.5) {
                     thread SMS(&Kandidat::saljiSMS, this, razred);
@@ -368,12 +381,12 @@ public:
         Uspjeh usp(razred);
         usp.GetPredmeti()->AddElement(predmet, napomena);
         _uspjeh.push_back(usp);
-        thread mail(&Kandidat::saljiMail, this,razred, predmet);
+        thread mail(&Kandidat::saljiMail, this, razred, predmet);
         mail.join();
         return true;
     }
     friend ostream& operator<< (ostream& COUT, Kandidat& obj) {
-        COUT<< "Ime i prezime: " << obj._imePrezime << "\n" << "Email: " << obj._emailAdresa << "\n"<< "Broj tel.: " << obj._brojTelefona << endl;
+        COUT << "Ime i prezime: " << obj._imePrezime << "\n" << "Email: " << obj._emailAdresa << "\n" << "Broj tel.: " << obj._brojTelefona << endl;
         for (size_t i = 0; i < obj._uspjeh.size(); i++)
             COUT << obj._uspjeh[i];
         return COUT;
@@ -392,14 +405,7 @@ public:
             for (int j = 0; j < _uspjeh[i].GetPredmeti()->getTrenutno(); j++) {
                 for (int k = 0; k < _uspjeh[i].GetPredmeti()->getElement1(j).GetOcjene().getTrenutno(); k++) {
                     if (_uspjeh[i].GetPredmeti()->getElement1(j).GetOcjene().getElement2(k) > prvi && zadnji > _uspjeh[i].GetPredmeti()->getElement1(j).GetOcjene().getElement2(k)) {
-                        if (_uspjeh[i].GetPredmeti()->getElement1(j).GetOcjene().getTrenutno() >= 1) {
-                            prosjekDani++;
-                            if (prosjekDani > 0) {
-                                prosjekDani /= _uspjeh[i].GetPredmeti()->getElement1(j).GetOcjene().getTrenutno();
-                            }
-                            novi.AddElement(_uspjeh[i].GetPredmeti()->getElement1(j), prosjekDani);
-                        }
-                        prosjekDani = 0.0f;
+                        novi.AddElement(_uspjeh[i].GetPredmeti()->getElement1(j), _uspjeh[i].GetPredmeti()->getElement1(j).prosjekDatuma());
                     }
                 }
             }
@@ -468,17 +474,17 @@ void main() {
         cout << err.what() << crt;
     }
 
-   /* parametri: nazivPredmeta, prva ocjena, datum*/
+    /* parametri: nazivPredmeta, prva ocjena, datum*/
     Predmet Matematika("Matematika", 5, datum19062019),
         Fizika("Fizika", 5, datum20062019),
         Hemija("Hemija", 2, datum30062019),
         Engleski("Engleski", 5, datum05072019);
-
+    // 737,134 737,150 737,150
     Matematika.AddOcjena(3, datum05072019);
     Matematika.AddOcjena(5, datum05072019);
 
-     /*ispisuje: naziv predmeta, ocjene (zajedno sa datumom polaganja) i prosjecnu ocjenu na predmetu
-     ukoliko predmet nema niti jednu ocjenu prosjecna treba biti 0*/
+    /*ispisuje: naziv predmeta, ocjene (zajedno sa datumom polaganja) i prosjecnu ocjenu na predmetu
+    ukoliko predmet nema niti jednu ocjenu prosjecna treba biti 0*/
     cout << Matematika << endl;
 
     if (ValidirajEmail("text.text@edu.fit.ba"))
@@ -516,7 +522,7 @@ void main() {
     Funkcija vraca true ili false u zavisnosti od (ne)uspjesnost izvrsenja
     */
     if (jasmin.AddPredmet(DRUGI, Fizika, "Napomena 1"))
-        cout  << "Predmet uspjesno dodan!" << crt;
+        cout << "Predmet uspjesno dodan!" << crt;
     if (jasmin.AddPredmet(DRUGI, Hemija, "Napomena 2"))
         cout << "Predmet uspjesno dodan!" << crt;
     if (jasmin.AddPredmet(PRVI, Engleski, "Napomena 3"))
